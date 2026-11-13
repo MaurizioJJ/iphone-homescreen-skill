@@ -1,0 +1,6 @@
+# Your own data: installed apps, preferences, backups. Never commit these.
+plan.txt
+layout*.txt
+backups/
+RULES.md
+__pycache__/
