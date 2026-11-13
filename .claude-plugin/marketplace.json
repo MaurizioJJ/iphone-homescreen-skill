@@ -1,0 +1,12 @@
+{
+  "name": "iphone-homescreen-skill",
+  "owner": { "name": "MaurizioJJ" },
+  "description": "One plugin: rearrange an iPhone Home Screen from a Mac over USB, with Claude doing the sorting.",
+  "plugins": [
+    {
+      "name": "iphone-homescreen",
+      "source": "./",
+      "description": "Rearrange an iPhone Home Screen from a Mac over USB: back up, regroup apps into folders with Claude, apply, undo."
+    }
+  ]
+}

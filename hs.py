@@ -9,20 +9,38 @@
     ./hs.py apply             layout.txt -> phone (backs up first)
     ./hs.py backup            phone -> backups/
     ./hs.py restore [FILE]    newest backup (or FILE) -> phone
+    ./hs.py data              print the folder the files above live in
     ./hs.py test              self-check, no phone needed
 """
 import argparse
 import asyncio
 import difflib
+import os
 import plistlib
 import sys
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
-HERE = Path(__file__).parent
-LAYOUT = HERE / "layout.txt"
-BACKUPS = HERE / "backups"
+HERE = Path(__file__).resolve().parent
+
+
+def data_dir(here=HERE, env=os.environ):
+    """Folder for layout.txt, plan.txt and backups/: $HS_DATA, else next to this file.
+
+    Installed as a Claude Code plugin this file sits in a cache that every update replaces,
+    so there the data goes to the home folder instead.
+    """
+    if env.get("HS_DATA"):
+        return Path(env["HS_DATA"]).expanduser()
+    if "/.claude/plugins/" in here.as_posix() + "/":
+        return Path.home() / "iphone-homescreen-data"
+    return here
+
+
+DATA = data_dir()
+LAYOUT = DATA / "layout.txt"
+BACKUPS = DATA / "backups"
 
 PAGE_SLOTS, DOCK_SLOTS, FOLDER_PAGE_SLOTS = 24, 4, 9  # iPhone: 6 rows x 4, dock 4, folder 3 x 3
 WIDGET_SLOTS = {"small": 4, "medium": 8, "large": 16}
@@ -171,7 +189,7 @@ async def set_state(state):
 
 
 def save_backup(state):
-    BACKUPS.mkdir(exist_ok=True)
+    BACKUPS.mkdir(parents=True, exist_ok=True)
     path = BACKUPS / f"{datetime.now():%Y-%m-%d-%H%M%S}.plist"
     path.write_bytes(plistlib.dumps(state))
     return path
@@ -197,6 +215,7 @@ async def write_and_verify(new):
 # ---------- commands ----------
 
 async def cmd_pull(args):
+    DATA.mkdir(parents=True, exist_ok=True)
     LAYOUT.write_text(render(await get_state()))
     print(f"Wrote {LAYOUT}")
 
@@ -217,7 +236,16 @@ async def cmd_restore(args):
     await write_and_verify(plistlib.loads(path.read_bytes()))
 
 
+async def cmd_data(args):
+    print(DATA)
+
+
 async def cmd_test(args):
+    home_data = Path.home() / "iphone-homescreen-data"
+    assert data_dir(Path("/x/tool"), {}) == Path("/x/tool")
+    assert data_dir(Path("/x/.claude/plugins/cache/m/p/1"), {}) == home_data
+    assert data_dir(Path("/x/.claude/plugins/cache/m/p/1"), {"HS_DATA": "/y"}) == Path("/y")
+
     app = lambda i: {"displayIdentifier": i, "displayName": i.upper()}
     widget = {"displayIdentifier": "W-1", "iconType": "custom", "gridSize": "small", "widgetIdentifier": "w", "iconLists": []}
     folder = {"displayName": "Stuff | more", "iconLists": [[app("c"), app("d")], [app("e")]], "listType": "folder"}
@@ -249,6 +277,7 @@ def main():
     r = sub.add_parser("restore")
     r.add_argument("file", nargs="?")
     r.set_defaults(fn=cmd_restore)
+    sub.add_parser("data").set_defaults(fn=cmd_data)
     sub.add_parser("test").set_defaults(fn=cmd_test)
     args = p.parse_args()
     try:

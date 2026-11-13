@@ -6,14 +6,14 @@ import sys, plistlib, pathlib, importlib.util
 REPO = pathlib.Path(__file__).parent
 spec = importlib.util.spec_from_file_location("hs", REPO / "hs.py"); hs = importlib.util.module_from_spec(spec); spec.loader.exec_module(hs)
 
-PLAN_FILE = REPO / "plan.txt"
+PLAN_FILE = hs.DATA / "plan.txt"
 if not PLAN_FILE.exists():
-    sys.exit("No plan.txt yet. Copy plan.example.txt to plan.txt and fill it in.")
+    sys.exit(f"No plan.txt yet. Copy {REPO / 'plan.example.txt'} to {PLAN_FILE} and fill it in.")
 PLAN = PLAN_FILE.read_text()
 keep = [l.split()[2] for l in PLAN.splitlines() if l.startswith("@ Keep ")]
 KEEP_PAGES = int(keep[0]) if keep else 1   # pages after the dock copied from the phone unchanged
 
-newest = max((REPO / "backups").glob("*.plist"), default=None)
+newest = max(hs.BACKUPS.glob("*.plist"), default=None)
 if newest is None:
     sys.exit("No backup yet. Run ./hs.py backup first.")
 state = plistlib.loads(newest.read_bytes())
@@ -72,7 +72,7 @@ try:
 except hs.LayoutError as e:
     sys.exit(f"Plan not usable, nothing written:\n{e}")
 print('in the plan but not on the phone:', gone or 'none')
-(REPO / "layout.proposed.txt").write_text(text)
+(hs.DATA / "layout.proposed.txt").write_text(text)
 print("valid. pages:", len(new) - 1, "| items after the kept pages:", len(rest), "| in folders:", sum(n for _, n in summary))
 print("page slots:", [sum(hs.WIDGET_SLOTS.get(i.get("gridSize"), 1) for i in p) for p in new])
 for name, n in summary: print(f"{n:3} {name}")

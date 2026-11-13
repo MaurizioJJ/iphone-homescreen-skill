@@ -15,6 +15,15 @@ Reads the iPhone's Home Screen layout over USB into a text file, changes it ther
 
 ## Install
 
+As a Claude Code plugin:
+
+```
+claude plugin marketplace add MaurizioJJ/iphone-homescreen-skill
+claude plugin install iphone-homescreen@iphone-homescreen-skill
+```
+
+Or from a clone, which also gives the scripts to use by hand:
+
 ```
 git clone https://github.com/MaurizioJJ/iphone-homescreen-skill ~/iphone-homescreen
 ln -s ~/iphone-homescreen/skills/iphone-homescreen ~/.claude/skills/iphone-homescreen
@@ -37,13 +46,14 @@ Every use starts with a backup of the phone's layout. Claude then asks how you w
 
 ## Where the tool is
 
-The tool is the repository this skill sits in. Find it from the link:
+The tool is two folders above this skill, and the user's files are in a data folder the tool names:
 
 ```
-REPO=$(cd "$(readlink ~/.claude/skills/iphone-homescreen)/../.." && pwd)
+REPO=$(cd -P "${CLAUDE_SKILL_DIR}" && cd ../.. && pwd)
+DATA=$("$REPO/hs.py" data)
 ```
 
-Run every command from `$REPO`. Its README describes the `layout.txt` format; read it before editing a layout by hand.
+Run every command from `$REPO`. `layout.txt`, `layout.proposed.txt`, `plan.txt`, `RULES.md` and `backups/` are in `$DATA`: the same folder as `$REPO` for a clone, `~/iphone-homescreen-data` for a plugin install (a plugin update replaces the plugin's own folder). Setting `HS_DATA` picks another folder. `$REPO/README.md` describes the `layout.txt` format; read it before editing a layout by hand.
 
 ## Before anything
 
@@ -53,20 +63,20 @@ Run every command from `$REPO`. Its README describes the `layout.txt` format; re
 ## Every time, in this order
 
 1. **Back up first.** Run `./hs.py backup` before anything else, every time the skill is used, even when the user only asks a question about their layout. Tell the user the backup file's name. If the backup fails, stop: nothing else runs without it.
-2. **Read the phone.** `./hs.py pull`, then read `layout.txt`.
-3. **Ask how to reorganise.** Ask the user how they want the icons reorganised, and do the sorting yourself from their answer. Ask even when `RULES.md` exists: offer "the same rules as last time" as the first choice and quote those rules in one or two lines. Ask which pages must stay untouched. Skip the question only when the request already states the exact change ("move Slack to page 2").
-4. Write the answer to `RULES.md`, replacing what no longer holds. If the user has no preference, use the defaults under "Grouping rules" and say so.
-5. If `plan.txt` does not exist or does not match this phone, write it from `layout.txt` following `RULES.md`. `plan.example.txt` shows the format.
+2. **Read the phone.** `./hs.py pull`, then read `$DATA/layout.txt`.
+3. **Ask how to reorganise.** Ask the user how they want the icons reorganised, and do the sorting yourself from their answer. Ask even when `$DATA/RULES.md` exists: offer "the same rules as last time" as the first choice and quote those rules in one or two lines. Ask which pages must stay untouched. Skip the question only when the request already states the exact change ("move Slack to page 2").
+4. Write the answer to `$DATA/RULES.md`, replacing what no longer holds. If the user has no preference, use the defaults under "Grouping rules" and say so.
+5. If `$DATA/plan.txt` does not exist or does not match this phone, write it from `layout.txt` following `RULES.md`. `$REPO/plan.example.txt` shows the format.
 
 ## The loop
 
 1. The backup from "Every time" is already taken; take another with `./hs.py backup` if the user changed anything on the phone since.
-2. Change the plan in `plan.txt` (see below), then `python3 propose.py`. It writes `layout.proposed.txt` and touches nothing on the phone.
+2. Change the plan in `$DATA/plan.txt` (see below), then `python3 propose.py`. It writes `$DATA/layout.proposed.txt` and touches nothing on the phone.
 3. Show the user what changes: folders, counts, and where the apps they named ended up. Wait for a yes before step 4. A small move they asked for in so many words needs no second yes.
-4. `cp layout.proposed.txt layout.txt && ./hs.py apply`. It backs up again, sends, and reads the phone back.
+4. `cp "$DATA/layout.proposed.txt" "$DATA/layout.txt" && ./hs.py apply`. It backs up again, sends, and reads the phone back.
 5. Report "Applied and verified" or the diff it printed. On a diff, read the phone once more after a few seconds before concluding anything; if it still differs, say what differs and offer `./hs.py restore`.
 
-For a one-off move it is fine to skip `propose.py`: `./hs.py pull`, edit `layout.txt`, `./hs.py apply`. Then make the same change in `plan.txt`, or the next rebuild undoes it.
+For a one-off move it is fine to skip `propose.py`: `./hs.py pull`, edit `$DATA/layout.txt`, `./hs.py apply`. Then make the same change in `plan.txt`, or the next rebuild undoes it.
 
 ## The plan in plan.txt
 
@@ -85,7 +95,7 @@ After a run, check three lines of its output:
 
 ## Grouping rules
 
-The user's own rules live in `RULES.md` in the repository. They are private to that user and win over everything here. Without them, and when the user states no preference:
+The user's own rules live in `$DATA/RULES.md`. They are private to that user and win over everything here. Without them, and when the user states no preference:
 
 - Leave untouched every page the user did not ask to change.
 - Group by what the app is used for, with plain folder names. Not too granular; a use with only two apps joins a broader folder.
@@ -97,4 +107,4 @@ The user's own rules live in `RULES.md` in the repository. They are private to t
 - A page holds 24 slots, the dock 4, a folder page 9. A small widget takes 4 slots and only sits in columns 1-2 or 3-4, so place it after an even number of full rows; iOS moves it otherwise.
 - Widgets can be moved, not created or resized. A widget cannot go inside a folder.
 - `./hs.py restore` with no file restores the newest backup, which after an apply is the state just before it.
-- `plan.txt`, `layout.txt`, `layout.proposed.txt`, `backups/` and `RULES.md` list the user's installed apps and preferences. The repository's `.gitignore` keeps them out of git; never push them to a public repository.
+- `plan.txt`, `layout.txt`, `layout.proposed.txt`, `backups/` and `RULES.md` list the user's installed apps and preferences. In a clone the `.gitignore` keeps them out of git; never push them to a public repository.

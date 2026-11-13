@@ -10,16 +10,28 @@ Tested on one phone only: an iPhone 16 on iOS 27.2. Every apply takes a backup f
 
 Needs a Mac with [`uv`](https://docs.astral.sh/uv/) (`brew install uv`).
 
+As a Claude Code plugin:
+
+```
+/plugin install iphone-homescreen --marketplace MaurizioJJ/iphone-homescreen-skill
+```
+
+On an older Claude Code, in two steps from the terminal:
+
+```
+claude plugin marketplace add MaurizioJJ/iphone-homescreen-skill
+claude plugin install iphone-homescreen@iphone-homescreen-skill
+```
+
+Or clone it, to use the scripts by hand as well:
+
 ```
 git clone https://github.com/MaurizioJJ/iphone-homescreen-skill ~/iphone-homescreen
 cd ~/iphone-homescreen && ./hs.py test        # prints "ok", no phone needed
-```
-
-To use it through Claude Code, link the skill and start a new session:
-
-```
 ln -s ~/iphone-homescreen/skills/iphone-homescreen ~/.claude/skills/iphone-homescreen
 ```
+
+Start a new Claude Code session afterwards.
 
 ## Use with Claude
 
@@ -39,6 +51,7 @@ Claude backs up the layout, asks how you want the icons reorganised, shows you t
 ./hs.py backup            # phone -> backups/
 ./hs.py restore           # newest backup -> phone
 ./hs.py restore FILE      # a specific backup -> phone
+./hs.py data              # print the folder your files are in
 ./hs.py test              # self-check, no phone needed
 ```
 
@@ -95,4 +108,4 @@ cp layout.proposed.txt layout.txt     # accept it
 
 ## Your data
 
-`plan.txt`, `layout.txt`, `layout.proposed.txt`, `backups/` and `RULES.md` list your installed apps and stay on your Mac; `.gitignore` keeps them out of git. Nothing is sent anywhere except to your own phone over the cable.
+`plan.txt`, `layout.txt`, `layout.proposed.txt`, `backups/` and `RULES.md` list your installed apps and stay on your Mac. In a clone they sit next to `hs.py` and `.gitignore` keeps them out of git. Installed as a plugin they are in `~/iphone-homescreen-data`, because a plugin update replaces the plugin's own folder. Set `HS_DATA` to use another folder. Nothing is sent anywhere except to your own phone over the cable.
