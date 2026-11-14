@@ -11,7 +11,7 @@ Reads the iPhone's Home Screen layout over USB into a text file, changes it ther
 
 - A Mac with [`uv`](https://docs.astral.sh/uv/) (`brew install uv`). `uv` fetches the one dependency, `pymobiledevice3`, on first run.
 - An iPhone on a USB data cable (not a charge-only cable), unlocked, with "Trust This Computer" accepted.
-- Tested on iOS 27.2 with an iPhone 16. The page size in `hs.py` (6 rows of 4) is the iPhone grid; an iPad needs other numbers.
+- Tested on iOS 27.2 with an iPhone 16. The page size in `hs.py` (6 rows of 4) is the iPhone grid; for an iPad set `HS_GRID=30,12,16` and a separate `HS_DATA` folder on every command (used on an iPad Air, iPadOS 27.0.1).
 
 ## Install
 

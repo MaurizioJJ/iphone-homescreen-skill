@@ -42,7 +42,8 @@ DATA = data_dir()
 LAYOUT = DATA / "layout.txt"
 BACKUPS = DATA / "backups"
 
-PAGE_SLOTS, DOCK_SLOTS, FOLDER_PAGE_SLOTS = 24, 4, 9  # iPhone: 6 rows x 4, dock 4, folder 3 x 3
+# iPhone: 6 rows x 4, dock 4, folder 3 x 3. Other devices set HS_GRID, e.g. "30,12,16" for an iPad (6 x 5, folder 4 x 4).
+PAGE_SLOTS, DOCK_SLOTS, FOLDER_PAGE_SLOTS = map(int, os.environ.get("HS_GRID", "24,4,9").split(","))
 WIDGET_SLOTS = {"small": 4, "medium": 8, "large": 16}
 SEP = " | "
 
@@ -154,7 +155,8 @@ def build(pages, current):
                     errors.append(f"{where}: folder '{entry['name']}' has a page with {len(fp)} items, max {FOLDER_PAGE_SLOTS}")
             items.append({"displayName": entry["name"], "iconLists": lists, "listType": "folder"})
         limit = DOCK_SLOTS if n == 0 else PAGE_SLOTS
-        if slots(items) > limit:
+        same = n < len(current) and render([items]) == render([current[n]])  # a page left as the device has it is valid
+        if slots(items) > limit and not same:
             errors.append(f"{where}: {slots(items)} slots used, max {limit}")
         state.append(items)
 

@@ -57,6 +57,8 @@ Claude backs up the layout, asks how you want the icons reorganised, shows you t
 
 `apply` saves the phone's current layout to `backups/` before it writes, then reads the phone back and confirms it matches.
 
+For an iPad, set the grid and a separate data folder on every command: `HS_DATA=~/ipad-homescreen-data HS_GRID=30,12,16 ./hs.py pull` (page slots, dock slots, folder-page slots). A page left exactly as the device has it is never size-checked.
+
 ### layout.txt
 
 ```

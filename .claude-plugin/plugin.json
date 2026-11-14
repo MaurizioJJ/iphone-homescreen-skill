@@ -1,7 +1,7 @@
 {
   "name": "iphone-homescreen",
   "description": "Rearrange an iPhone Home Screen from a Mac over USB: back up, regroup apps into folders with Claude, apply, undo.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": { "name": "MaurizioJJ" },
   "homepage": "https://github.com/MaurizioJJ/iphone-homescreen-skill",
   "repository": "https://github.com/MaurizioJJ/iphone-homescreen-skill",
